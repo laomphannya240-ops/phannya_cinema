@@ -1,0 +1,48 @@
+/** Demo users for the admin user table. Authentication itself is handled in-memory. */
+export const users = [
+  {
+    id: 'u1',
+    name: 'Sophea Admin',
+    email: 'admin@phannya.demo',
+    role: 'admin',
+    phone: '+855 12 345 678',
+    status: 'active',
+    joinedAt: '2025-04-12',
+  },
+  {
+    id: 'u2',
+    name: 'Demo Guest',
+    email: 'guest@phannya.demo',
+    role: 'customer',
+    phone: '+855 12 000 001',
+    status: 'active',
+    joinedAt: '2026-01-08',
+  },
+  {
+    id: 'u3',
+    name: 'Rith Chan',
+    email: 'rith.chan@example.com',
+    role: 'customer',
+    phone: '+855 77 552 110',
+    status: 'active',
+    joinedAt: '2026-03-22',
+  },
+  {
+    id: 'u4',
+    name: 'Maria Santos',
+    email: 'maria.s@example.com',
+    role: 'customer',
+    phone: '+855 33 881 204',
+    status: 'inactive',
+    joinedAt: '2026-06-14',
+  },
+  {
+    id: 'u5',
+    name: 'Library Staff',
+    email: 'staff@phannya.demo',
+    role: 'staff',
+    phone: '+855 23 999 400',
+    status: 'active',
+    joinedAt: '2026-02-01',
+  },
+]

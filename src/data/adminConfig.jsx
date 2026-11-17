@@ -1,0 +1,237 @@
+import { Armchair, Building2, CalendarClock, Clapperboard, DoorOpen, Tag, Ticket, Users } from 'lucide-react'
+import { StatusPill } from '../components/common/Display.jsx'
+import { getMovieById } from './movies.js'
+import { getCinemaById, getHallById } from './cinemas.js'
+import { formatCurrency, formatDate } from '../utils/format.js'
+
+const movieName = (row) => getMovieById(row.movieId)?.title || '—'
+const cinemaName = (row) => getCinemaById(row.cinemaId)?.shortName || '—'
+const hallName = (row) => getHallById(row.hallId)?.name || '—'
+
+export const resourceConfigs = {
+  movies: {
+    title: 'Movies',
+    singular: 'Movie',
+    icon: Clapperboard,
+    description: 'Add, edit and organise every film in your catalogue.',
+    searchFields: ['title', 'director', 'titleKh'],
+    filterField: 'status',
+    filterOptions: ['all', 'now-showing', 'coming-soon'],
+    columns: [
+      { key: 'title', label: 'Title', render: (row) => <span className="font-semibold text-ink">{row.title}</span> },
+      { key: 'genres', label: 'Genres', render: (row) => row.genres?.slice(0, 2).join(', ') || '—' },
+      { key: 'duration', label: 'Duration', render: (row) => `${row.duration} min` },
+      { key: 'releaseDate', label: 'Release', render: (row) => formatDate(row.releaseDate) },
+      { key: 'rating', label: 'Rating', render: (row) => (row.rating ? `★ ${row.rating}` : '—') },
+      { key: 'status', label: 'Status', badge: true },
+    ],
+    fields: [
+      { name: 'title', label: 'Title', type: 'text', required: true },
+      { name: 'titleKh', label: 'Khmer Title', type: 'text' },
+      { name: 'description', label: 'Synopsis', type: 'textarea' },
+      { name: 'genres', label: 'Genres (comma separated)', type: 'list' },
+      { name: 'duration', label: 'Duration (minutes)', type: 'number', required: true },
+      { name: 'releaseDate', label: 'Release Date', type: 'date', required: true },
+      { name: 'director', label: 'Director', type: 'text' },
+      { name: 'cast', label: 'Cast (comma separated)', type: 'list' },
+      { name: 'rating', label: 'Rating', type: 'number' },
+      { name: 'certificate', label: 'Certificate', type: 'select', options: ['G', 'PG', 'PG-13', 'R'] },
+      {
+        name: 'status',
+        label: 'Status',
+        type: 'select',
+        options: ['now-showing', 'coming-soon'],
+        required: true,
+      },
+    ],
+  },
+
+  cinemas: {
+    title: 'Cinema Locations',
+    singular: 'Cinema',
+    icon: Building2,
+    description: 'Manage the locations where your movies are screened.',
+    searchFields: ['name', 'city', 'address'],
+    filterField: 'city',
+    filterOptions: ['all', 'Phnom Penh', 'Siem Reap'],
+    columns: [
+      { key: 'name', label: 'Cinema', render: (row) => <span className="font-semibold text-ink">{row.name}</span> },
+      { key: 'city', label: 'City' },
+      { key: 'address', label: 'Address', render: (row) => <span className="block max-w-xs truncate">{row.address}</span> },
+      { key: 'phone', label: 'Phone' },
+      { key: 'features', label: 'Features', render: (row) => row.features?.slice(0, 2).join(', ') || '—' },
+    ],
+    fields: [
+      { name: 'name', label: 'Cinema Name', type: 'text', required: true },
+      { name: 'shortName', label: 'Short Name', type: 'text' },
+      { name: 'city', label: 'City', type: 'text', required: true },
+      { name: 'address', label: 'Address', type: 'text', required: true },
+      { name: 'phone', label: 'Phone', type: 'text' },
+      { name: 'features', label: 'Features (comma separated)', type: 'list' },
+    ],
+  },
+
+  halls: {
+    title: 'Cinema Halls',
+    singular: 'Hall',
+    icon: DoorOpen,
+    description: 'Configure screens, seating capacity and ticket prices.',
+    searchFields: ['name', 'type'],
+    filterField: 'type',
+    filterOptions: ['all', 'IMAX', 'VIP', 'Standard', '4DX', 'Family'],
+    columns: [
+      { key: 'name', label: 'Hall', render: (row) => <span className="font-semibold text-ink">{row.name}</span> },
+      { key: 'cinemaId', label: 'Cinema', render: cinemaName },
+      { key: 'type', label: 'Type', badge: true },
+      { key: 'rows', label: 'Rows' },
+      { key: 'seatsPerRow', label: 'Seats / Row' },
+      { key: 'price', label: 'Base Price', render: (row) => formatCurrency(row.price) },
+    ],
+    fields: [
+      { name: 'name', label: 'Hall Name', type: 'text', required: true },
+      { name: 'cinemaId', label: 'Cinema', type: 'select', optionsKey: 'cinemas', optionLabel: 'name', required: true },
+      { name: 'type', label: 'Hall Type', type: 'select', options: ['Standard', 'VIP', 'IMAX', '4DX', 'Family'], required: true },
+      { name: 'rows', label: 'Rows', type: 'number', required: true },
+      { name: 'seatsPerRow', label: 'Seats per Row', type: 'number', required: true },
+      { name: 'vipRows', label: 'VIP Rows (e.g. 0,1)', type: 'numberList' },
+      { name: 'price', label: 'Base Ticket Price ($)', type: 'number', required: true },
+      { name: 'features', label: 'Features (comma separated)', type: 'list' },
+    ],
+  },
+
+  seats: {
+    title: 'Seats',
+    singular: 'Seat',
+    icon: Armchair,
+    description: 'Track seat inventory across every hall.',
+    searchFields: ['label', 'hallName', 'row'],
+    filterField: 'status',
+    filterOptions: ['all', 'available', 'maintenance'],
+    columns: [
+      { key: 'label', label: 'Seat', render: (row) => <span className="font-semibold text-ink">{row.label}</span> },
+      { key: 'hallId', label: 'Hall', render: hallName },
+      { key: 'row', label: 'Row' },
+      { key: 'number', label: 'Number' },
+      { key: 'type', label: 'Type', badge: true },
+      { key: 'status', label: 'Status', badge: true },
+    ],
+    fields: [
+      { name: 'hallId', label: 'Hall', type: 'select', optionsKey: 'halls', optionLabel: 'name', required: true },
+      { name: 'row', label: 'Row', type: 'text', required: true },
+      { name: 'number', label: 'Seat Number', type: 'number', required: true },
+      { name: 'label', label: 'Seat Label', type: 'text', required: true, hint: 'e.g. A12' },
+      { name: 'type', label: 'Type', type: 'select', options: ['standard', 'vip'], required: true },
+      { name: 'status', label: 'Status', type: 'select', options: ['available', 'maintenance'], required: true },
+    ],
+  },
+
+  showtimes: {
+    title: 'Showtimes',
+    singular: 'Showtime',
+    icon: CalendarClock,
+    description: 'Schedule screenings and manage available seats.',
+    searchFields: ['id', 'time'],
+    filterField: null,
+    columns: [
+      { key: 'id', label: 'ID', render: (row) => <span className="font-mono text-xs">{row.id}</span> },
+      { key: 'movieId', label: 'Movie', render: movieName },
+      { key: 'cinemaId', label: 'Cinema', render: cinemaName },
+      { key: 'hallId', label: 'Hall', render: hallName },
+      { key: 'date', label: 'Date', render: (row) => formatDate(row.date) },
+      { key: 'time', label: 'Time' },
+      { key: 'price', label: 'Price', render: (row) => formatCurrency(row.price) },
+    ],
+    fields: [
+      { name: 'movieId', label: 'Movie', type: 'select', optionsKey: 'movies', optionLabel: 'title', required: true },
+      { name: 'cinemaId', label: 'Cinema', type: 'select', optionsKey: 'cinemas', optionLabel: 'name', required: true },
+      { name: 'hallId', label: 'Hall', type: 'select', optionsKey: 'halls', optionLabel: 'name', required: true },
+      { name: 'date', label: 'Date', type: 'date', required: true },
+      { name: 'time', label: 'Time', type: 'time', required: true },
+      { name: 'price', label: 'Ticket Price ($)', type: 'number', required: true },
+      { name: 'totalSeats', label: 'Total Seats', type: 'number' },
+    ],
+  },
+
+  bookings: {
+    title: 'Bookings',
+    singular: 'Booking',
+    icon: Ticket,
+    description: 'Review and update all customer bookings.',
+    searchFields: ['reference'],
+    filterField: 'status',
+    filterOptions: ['all', 'upcoming', 'completed', 'cancelled'],
+    columns: [
+      { key: 'reference', label: 'Reference', render: (row) => <span className="font-mono text-xs font-semibold text-gold">{row.reference}</span> },
+      { key: 'movieId', label: 'Movie', render: movieName },
+      { key: 'cinemaId', label: 'Cinema', render: cinemaName },
+      { key: 'customer', label: 'Customer', render: (row) => row.customer?.name || '—' },
+      { key: 'date', label: 'Date', render: (row) => formatDate(row.date) },
+      { key: 'total', label: 'Total', render: (row) => formatCurrency(row.total) },
+      { key: 'status', label: 'Status', badge: true },
+    ],
+    fields: [
+      { name: 'reference', label: 'Reference', type: 'text', required: true },
+      { name: 'date', label: 'Date', type: 'date', required: true },
+      { name: 'time', label: 'Time', type: 'time', required: true },
+      { name: 'ticketCount', label: 'Tickets', type: 'number' },
+      { name: 'total', label: 'Total ($)', type: 'number', required: true },
+      { name: 'status', label: 'Status', type: 'select', options: ['upcoming', 'completed', 'cancelled'], required: true },
+    ],
+  },
+
+  users: {
+    title: 'Users',
+    singular: 'User',
+    icon: Users,
+    description: 'Manage customers, staff and administrator accounts.',
+    searchFields: ['name', 'email'],
+    filterField: 'role',
+    filterOptions: ['all', 'admin', 'customer', 'staff'],
+    columns: [
+      { key: 'name', label: 'Name', render: (row) => <span className="font-semibold text-ink">{row.name}</span> },
+      { key: 'email', label: 'Email' },
+      { key: 'phone', label: 'Phone' },
+      { key: 'role', label: 'Role', badge: true },
+      { key: 'joinedAt', label: 'Joined', render: (row) => formatDate(row.joinedAt) },
+      { key: 'status', label: 'Status', badge: true },
+    ],
+    fields: [
+      { name: 'name', label: 'Full Name', type: 'text', required: true },
+      { name: 'email', label: 'Email', type: 'email', required: true },
+      { name: 'phone', label: 'Phone', type: 'text' },
+      { name: 'role', label: 'Role', type: 'select', options: ['customer', 'staff', 'admin'], required: true },
+      { name: 'status', label: 'Status', type: 'select', options: ['active', 'inactive'], required: true },
+    ],
+  },
+
+  promotions: {
+    title: 'Promotions',
+    singular: 'Promotion',
+    icon: Tag,
+    description: 'Create and schedule discounts for your guests.',
+    searchFields: ['title', 'code'],
+    filterField: 'status',
+    filterOptions: ['all', 'active', 'scheduled'],
+    columns: [
+      { key: 'title', label: 'Promotion', render: (row) => <span className="font-semibold text-ink">{row.title}</span> },
+      { key: 'code', label: 'Code', render: (row) => <span className="font-mono text-xs text-gold">{row.code}</span> },
+      { key: 'discount', label: 'Discount', render: (row) => (row.type === 'percentage' ? `${row.discount}%` : formatCurrency(row.discount)) },
+      { key: 'startDate', label: 'Starts', render: (row) => formatDate(row.startDate) },
+      { key: 'endDate', label: 'Ends', render: (row) => formatDate(row.endDate) },
+      { key: 'status', label: 'Status', badge: true },
+    ],
+    fields: [
+      { name: 'title', label: 'Title', type: 'text', required: true },
+      { name: 'titleKh', label: 'Khmer Title', type: 'text' },
+      { name: 'code', label: 'Promo Code', type: 'text', required: true },
+      { name: 'description', label: 'Description', type: 'textarea' },
+      { name: 'discount', label: 'Discount Value', type: 'number', required: true },
+      { name: 'type', label: 'Discount Type', type: 'select', options: ['percentage', 'fixed'], required: true },
+      { name: 'startDate', label: 'Start Date', type: 'date', required: true },
+      { name: 'endDate', label: 'End Date', type: 'date', required: true },
+      { name: 'status', label: 'Status', type: 'select', options: ['active', 'scheduled'], required: true },
+    ],
+  },
+}
+
+export const statusRenderer = StatusPill
